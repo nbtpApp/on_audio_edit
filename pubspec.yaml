@@ -9,8 +9,8 @@ homepage: https://github.com/nbtpApp/on_audio_edit
 # website: https://www.lucasjosino.com/
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
-  flutter: ">=1.20.0"
+  sdk: ^3.5.0 #'>=2.12.0 <3.0.0'
+  flutter: '>=3.3.0' #">=1.20.0"
 
 dependencies:
   # Flutter
@@ -19,7 +19,7 @@ dependencies:
 
 dev_dependencies:
   # Flutter
-  flutter_lints: ^1.0.4
+  flutter_lints: ^4.0.0 #^1.0.4
   flutter_test:
     sdk: flutter
 
