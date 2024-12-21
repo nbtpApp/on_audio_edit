@@ -30,3 +30,5 @@ part 'details/types/artwork_type.dart';
 // Models
 part 'details/models/audio_model.dart';
 part 'details/models/image_model.dart';
+
+//test
