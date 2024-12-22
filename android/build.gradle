@@ -30,7 +30,7 @@ android {
         namespace = "com.example.plugin_sample"
     }
 
-    compileSdk = 34
+    compileSdk = 33
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
