@@ -28,7 +28,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.nbtpApp.on_audio_edit
+        package: com.lucasjosino.on_audio_edit
         pluginClass: OnAudioEditPlugin
 #      ios:
 #        pluginClass: OnAudioEditPlugin
