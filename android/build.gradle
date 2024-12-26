@@ -2,14 +2,14 @@ group 'com.lucasjosino.on_audio_edit'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = "1.7.10"
+    ext.kotlin_version = "2.1.0" //"1.7.10"
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.0")
+        classpath("com.android.tools.build:gradle:8.7.0") //7.3.0
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
     }
 }
@@ -30,7 +30,7 @@ android {
         namespace = "com.example.plugin_sample"
     }
 
-    compileSdk = 33
+    compileSdk = 34 //33
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
