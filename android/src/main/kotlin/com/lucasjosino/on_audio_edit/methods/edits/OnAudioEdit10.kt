@@ -85,7 +85,7 @@ class OnAudioEdit10(private val context: Context, private val activity: Activity
 
         // Use DocumentFile to navigate and find specific data inside specific folder.
         // We need this, cuz google blocked some access in Android >= 10/Q
-        val pUri: Uri
+        var pUri: Uri //val --> var
         val dFile = DocumentFile.fromTreeUri(context, uriFolder) ?: return@withContext false
         // [getFile] will give a slow performance, so, we use Kotlin Coroutines and "doEverythingInBackground"
         val file = getFile(dFile, internalData)?.uri
