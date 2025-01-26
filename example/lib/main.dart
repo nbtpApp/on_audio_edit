@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_toast_widget/on_toast_widget.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(
@@ -52,18 +53,38 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   List<SongModel> songList = [];
   bool? result;
 
+  bool storageGranted = false;
+
   @override
   void initState() {
     super.initState();
     requestPermission();
   }
 
-  requestPermission() async {
-    bool permissionStatus = await _audioQuery.permissionsStatus();
-    if (!permissionStatus) {
+
+  Future requestPermission() async {
+    //todo リクエストを正しくする。
+    if (await Permission.storage.request().isGranted) {
+      // パーミッションが許可されました
       await _audioQuery.permissionsRequest();
-      setState(() {});
+      songList = await _audioQuery.querySongs();
+      setState(()=> storageGranted = true);
+    } else {
+      // パーミッションが拒否されました
+      setState(()=> storageGranted = false);
+      debugPrint("Permission Denied");
+      await openAppSettings();
+
+
+
     }
+
+
+    // bool permissionStatus = await _audioQuery.permissionsStatus();
+    // if (!permissionStatus) {
+    //   await _audioQuery.permissionsRequest();
+    //   setState(() {});
+    // }
   }
 
   @override
@@ -76,17 +97,12 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         ),
         body: Stack(
           children: [
-            FutureBuilder<List<SongModel>>(
-              future: _audioQuery.querySongs(),
-              builder: (context, item) {
-                // Loading content
-                if (item.data == null) return const CircularProgressIndicator();
-
+            Builder(builder: (context){
+              if(storageGranted){
                 // When you try "query" without asking for [READ] or [Library] permission
                 // the plugin will return a [Empty] list.
-                if (item.data!.isEmpty) return const Text("Nothing found!");
+                if (songList.isEmpty) return const Text("Nothing found!");
 
-                songList = item.data!;
                 return RefreshIndicator(
                   onRefresh: () async {
                     setState(() {});
@@ -114,8 +130,74 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     },
                   ),
                 );
-              },
-            ),
+              }else{
+                return Center(
+                  child: TextButton(
+                    onPressed: () async => await requestPermission(),
+                    child: const Text("Request Storage Permission"),
+                  ),
+                );
+
+              }
+            }),
+
+            // FutureBuilder<List<SongModel>>(
+            //   future: _audioQuery.querySongs(),
+            //   builder: (context, item) {
+            //
+            //     if(storageGranted){
+            //
+            //     // Loading content
+            //     if (item.data == null) return const CircularProgressIndicator();
+            //
+            //     // When you try "query" without asking for [READ] or [Library] permission
+            //     // the plugin will return a [Empty] list.
+            //     if (item.data!.isEmpty) return const Text("Nothing found!");
+            //
+            //     songList = item.data!;
+            //     return RefreshIndicator(
+            //       onRefresh: () async {
+            //         setState(() {});
+            //       },
+            //       child: ListView.builder(
+            //         itemCount: songList.length,
+            //         itemBuilder: (context, index) {
+            //           return ListTile(
+            //             // [onTap] will open a dialog with two options:
+            //             //
+            //             // * Edit audio tags.
+            //             // * Edit audio artwork.
+            //             onTap: () => optionsDialog(context, index),
+            //             // [onLongPress] will read all information about selected items:
+            //             title: Text(songList[index].title),
+            //             subtitle: Text(
+            //               songList[index].artist ?? '<No artist>',
+            //             ),
+            //             trailing: const Icon(Icons.arrow_forward_rounded),
+            //             leading: QueryArtworkWidget(
+            //               id: songList[index].id,
+            //               type: ArtworkType.AUDIO,
+            //             ),
+            //           );
+            //         },
+            //       ),
+            //     );
+            //     }else{
+            //       return Center(
+            //         child: TextButton(
+            //           onPressed: () async {
+            //             if(await Permission.storage.request() == PermissionStatus.granted){
+            //               setState(()=> storageGranted = true);
+            //             }
+            //           },
+            //           child: Text("open Setting"),
+            //         ),
+            //       );
+            //
+            //     }
+            //
+            //   },
+            // ),
             OnToastWidget(
               effectType: EffectType.SLIDE,
               slidePositionType: SlidePositionType.BOTTOM,
