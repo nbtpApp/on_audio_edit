@@ -24,6 +24,8 @@ import org.jaudiotagger.tag.TagOptionSingleton
 import org.jaudiotagger.tag.images.ArtworkFactory
 import org.jaudiotagger.tag.reference.PictureTypes
 import java.io.*
+import java.net.HttpURLConnection
+import java.net.URL
 
 @SuppressLint("StaticFieldLeak")
 class OnArtworkEdit10(private val context: Context, private val activity: Activity) : ViewModel() {
@@ -115,7 +117,7 @@ class OnArtworkEdit10(private val context: Context, private val activity: Activi
         audioTag.deleteArtworkField()
 
         // Getting image and creating artwork field
-        val imageData = File(findImage(uri))
+        val imageData = if(isWebUri(uri)) downloadImage(uri) else File(findImage(uri))
         val artwork = ArtworkFactory.createArtworkFromFile(imageData)
 
         // Setup Image
@@ -184,6 +186,20 @@ class OnArtworkEdit10(private val context: Context, private val activity: Activi
         return imageData
     }
 
+    private fun downloadImage(uri: Uri): File {
+        val url = URL(uri.toString())
+        val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+        connection.doInput = true
+        connection.connect()
+        val inputStream = connection.inputStream
+        val tempFile = File.createTempFile("downloaded_image", ".jpg")
+        val outputStream = FileOutputStream(tempFile)
+        inputStream.copyTo(outputStream)
+        outputStream.close()
+        inputStream.close()
+        return tempFile
+    }
+
     private fun getFile(directory: DocumentFile, specificFile: File): DocumentFile? {
         val files = directory.listFiles()
         for (file in files) {
@@ -196,5 +212,12 @@ class OnArtworkEdit10(private val context: Context, private val activity: Activi
             if (data != null) return data
         }
         return null
+    }
+
+    private fun isWebUri(uri: Uri): Boolean {
+        val scheme = uri.scheme
+        val res = (scheme == "http" || scheme == "https")
+        Log.d("on_audio_info","isWebUri(${uri.toString()}) = $res")
+        return res
     }
 }

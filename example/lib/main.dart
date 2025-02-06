@@ -119,7 +119,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         // [onLongPress] will read all information about selected items:
                         title: Text(songList[index].title),
                         subtitle: Text(
-                          songList[index].artist ?? '<No artist>',
+                          songList[index].album ?? '<No artist>',
                         ),
                         trailing: const Icon(Icons.arrow_forward_rounded),
                         leading: QueryArtworkWidget(
@@ -232,28 +232,47 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
           title: const Text("Choose a option"),
           content: SizedBox(
             height: 120,
-            child: Column(
-              children: [
-                ListTile(
-                  title: const Text("Edit Audio"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    editAudioDialog(context, index);
-                  },
-                ),
-                ListTile(
-                  title: const Text("Edit Artwork"),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    result = await _audioEdit.editArtwork(
-                      songList[index].data,
-                    );
-                    setState(() {
-                      _controller.forward();
-                    });
-                  },
-                )
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  ListTile(
+                    title: const Text("Edit Audio"),
+                    onTap: () {
+                      Navigator.pop(context);
+                      editAudioDialog(context, index);
+                    },
+                  ),
+                  ListTile(
+                    title: const Text("Edit Artwork with FilePicker"),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      result = await _audioEdit.editArtwork(
+                        songList[index].data,
+                        openFilePicker: true,
+                        searchInsideFolders: true,
+                      );
+                      setState(() {
+                        _controller.forward();
+                      });
+                    },
+                  ),
+                  ListTile(
+                    title: const Text("Edit Artwork from Web"),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      result = await _audioEdit.editArtwork(
+                        songList[index].data,
+                        openFilePicker: false,
+                        imagePath: "https://ec.crypton.co.jp/img/vocaloid/mikuv4x_img1.jpg",
+                        searchInsideFolders: true,
+                      );
+                      setState(() {
+                        _controller.forward();
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [

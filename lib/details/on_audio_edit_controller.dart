@@ -295,7 +295,7 @@ class OnAudioEdit {
   ///
   /// * [data] is used to find multiples audios data.
   /// * [openFilePicker] is used to define if folder picker will be open to user choose image.
-  /// * [imagePath] is used to define image path, only necessary if [openFilePicker] is false.
+  /// * [imagePath] is used to define image path, only necessary if [openFilePicker] is false.if [imagePath] start with "http" or "https" get image from web(only Android).
   /// * [format] is used to define image type: [PNG] or [JPEG].
   /// * [size] is used to define image quality.
   /// * [description] is used to define artwork description.
