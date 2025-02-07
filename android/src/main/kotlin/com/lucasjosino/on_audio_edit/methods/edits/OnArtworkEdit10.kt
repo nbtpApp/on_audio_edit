@@ -28,6 +28,10 @@ import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+
 @SuppressLint("StaticFieldLeak")
 class OnArtworkEdit10(private val context: Context, private val activity: Activity) : ViewModel() {
 
@@ -222,7 +226,7 @@ class OnArtworkEdit10(private val context: Context, private val activity: Activi
         return res
     }
 
-    fun readBytes(stream: InputStream): ByteArray? {
+    private fun readBytes(stream: InputStream): ByteArray? {
         val byOS = ByteArrayOutputStream()
         val buffer = ByteArray(4096)
         var count: Int
