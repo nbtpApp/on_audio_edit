@@ -11,7 +11,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lucasjosino.on_audio_edit.utils.checkArtworkFormat
 import com.lucasjosino.on_audio_edit.utils.convertFileSize
-import com.lucasjosino.on_audio_edit.utils.readBytes
+//import com.lucasjosino.on_audio_edit.utils.readBytes
+//this import make error!!
 import com.lucasjosino.on_audio_edit.utils.warningSizeCall
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -219,5 +220,16 @@ class OnArtworkEdit10(private val context: Context, private val activity: Activi
         val res = (scheme == "http" || scheme == "https")
         Log.d("on_audio_info","isWebUri(${uri.toString()}) = $res")
         return res
+    }
+
+    fun readBytes(stream: InputStream): ByteArray? {
+        val byOS = ByteArrayOutputStream()
+        val buffer = ByteArray(4096)
+        var count: Int
+        while (stream.read(buffer).also { count = it } != -1) {
+            byOS.write(buffer, 0, count)
+        }
+        stream.close()
+        return byOS.toByteArray()
     }
 }
