@@ -1,3 +1,7 @@
+## [1.6.0] - [11.16.2025]
+### Features
+- **[Added]** add editArtworkWithUint8List method.
+
 ## [1.5.1] - [02.10.2022]
 ### Fixes
 - **[Fixed]** error when reading a flac file with others files.. - Thanks [@SimoneBressan](https://github.com/SimoneBressan)

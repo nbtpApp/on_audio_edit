@@ -157,6 +157,20 @@ class OnAudioEditPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 }
             }
 
+            // Write artwork　with ByteArray methods
+            "editArtworkWithByteArray" -> {
+                if (Build.VERSION.SDK_INT >= 29) {
+                    OnArtworkEditWithByteArray10(context, activity).editArtworkWithByteArray(result, call)
+                } else {
+                    //未実装
+                    result.error(
+                        channelError,
+                        "Unfortunately this method isn't implemented on Android 10 and above.",
+                        null
+                    )
+                }
+            }
+
             // Delete methods
             "deleteArtwork" -> {
                 if (Build.VERSION.SDK_INT >= 29) {

@@ -336,6 +336,47 @@ class OnAudioEdit {
     return resultEditArt;
   }
 
+  /// Used to edit audio artwork.
+  ///
+  /// Parameters:
+  ///
+  /// * [data] is used to find multiples audios data.
+  /// * [openFilePicker] is used to define if folder picker will be open to user choose image.
+  /// * [imagePath] is used to define image path, only necessary if [openFilePicker] is false.if [imagePath] start with "http" or "https" get image from web(only Android).
+  /// * [format] is used to define image type: [PNG] or [JPEG].
+  /// * [size] is used to define image quality.
+  /// * [description] is used to define artwork description.
+  /// * [searchInsideFolders] is used for find specific audio data inside the
+  /// folders. **(Only required when using Android 10 or above)**
+  ///
+  /// Important:
+  ///
+  /// * This method will always return a bool.
+  /// * If return true edit works, else edit found a problem.
+  /// * If [openFilePicker] is null, will be set to [true].
+  /// * If [imagePath] is null, [openFilePicker] need to be true.
+  /// * If [format] is null, will be set to [JPEG].
+  /// * If [size] is null, will be set to [24].
+  /// * If [description] is null, will be set to ["artwork"].
+  Future<bool> editArtworkWithUint8List(
+      String data, {
+        required Uint8List artworkBytes,
+        ArtworkFormat? format,
+        int? size,
+        String? description,
+        bool? searchInsideFolders,
+      }) async {
+    final bool resultEditArt = await _channel.invokeMethod("editArtworkWithByteArray", {
+      "data": data,
+      "artworkBytes": artworkBytes,
+      "type": format != null ? format.index : ArtworkFormat.JPEG.index,
+      "size": size ?? 24,
+      "description": description ?? "artwork",
+      "searchInsideFolders": searchInsideFolders ?? false,
+    });
+    return resultEditArt;
+  }
+
   /// Used to delete audio artwork.
   ///
   /// /// Parameter:

@@ -49,21 +49,38 @@ class OnArtworkEdit10(private val context: Context, private val activity: Activi
     ).getString(onSharedPrefKeyUriCode, "")
 
     //
+
+    /**
+     * アートワークの編集処理を開始するメソッド
+     * @param result Flutter側に処理結果を返すためのオブジェクト
+     * @param call Flutter側から渡されたメソッド呼び出し情報（引数など）
+     * @param uri アートワーク画像の場所を示すUri。nullの場合もある。
+     */
     fun editArtwork(result: MethodChannel.Result, call: MethodCall, uri: Uri?) {
         // This will write in file removing all unnecessary info.
+        // 1. JAudioTaggerライブラリの設定: 不要な情報を削除してファイルを書き込む設定
+        // これにより、ファイルサイズを少し節約できる
         TagOptionSingleton.getInstance().isId3v2PaddingWillShorten = true
 
-        //
+        // 2. Flutterから渡された引数をクラスのプロパティに設定
+        // サブフォルダ内も検索するかどうか
         this.searchInsideFolders = call.argument<Boolean>("searchInsideFolders")!!
+        // アートワーク画像のURI。引数のuriがnullでなければそれを使い、nullならimagePathから生成
         this.uri = uri ?: Uri.parse(call.argument<String>("imagePath")!!)
+        // メソッド呼び出し情報を後で使えるように保持
         this.call = call
 
         // Do everything in background to avoid bad performance.
+        // 3. バックグラウンドで重い処理を実行
+        // UIが固まる（フリーズする）のを防ぐため、非同期処理を開始
         viewModelScope.launch {
             // Start editing
+            // 実際にファイルの読み書きを行うメインの処理を呼び出す
             val resultEditArtwork = doEverythingInBackground()
 
             // Flutter UI will start, but, information still loading
+            // 4. Flutterに処理結果を返す
+            // doEverythingInBackgroundの処理が完了したら、その結果（true/false）をFlutterに通知
             result.success(resultEditArtwork)
         }
     }
