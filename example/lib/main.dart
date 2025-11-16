@@ -14,9 +14,10 @@ Copyright: © 2021, Lucas Josino. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
-import 'package:on_audio_query/on_audio_query.dart';
+//import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_toast_widget/on_toast_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
 
 void main() {
   runApp(
@@ -34,8 +35,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
-  // OnAudioQuery instance
-  final OnAudioQuery _audioQuery = OnAudioQuery();
+
   // OnAudioQuery instance
   final OnAudioEdit _audioEdit = OnAudioEdit();
 
@@ -50,10 +50,11 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   );
 
   // Main parameters
-  List<SongModel> songList = [];
-  bool? result;
+  Map<String,AudioModel> songMap = {};
+
 
   bool storageGranted = false;
+  bool? result;
 
   @override
   void initState() {
@@ -66,8 +67,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     //todo リクエストを正しくする。
     if (await Permission.storage.request().isGranted) {
       // パーミッションが許可されました
-      await _audioQuery.permissionsRequest();
-      songList = await _audioQuery.querySongs();
+
       setState(()=> storageGranted = true);
     } else {
       // パーミッションが拒否されました
@@ -99,36 +99,49 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
           children: [
             Builder(builder: (context){
               if(storageGranted){
-                // When you try "query" without asking for [READ] or [Library] permission
-                // the plugin will return a [Empty] list.
-                if (songList.isEmpty) return const Text("Nothing found!");
-
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    setState(() {});
-                  },
-                  child: ListView.builder(
-                    itemCount: songList.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        // [onTap] will open a dialog with two options:
-                        //
-                        // * Edit audio tags.
-                        // * Edit audio artwork.
-                        onTap: () => optionsDialog(context, index),
-                        // [onLongPress] will read all information about selected items:
-                        title: Text(songList[index].title),
-                        subtitle: Text(
-                          songList[index].album ?? '<No artist>',
+                return Column(
+                  children: [
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: () async {
+                          final keys = songMap.keys.toList();
+                          songMap.clear();
+                          setState(() {});
+                          await Future.delayed(const Duration(milliseconds: 500));
+                          for(final key in keys) {
+                            songMap[key] = await _audioEdit.readAudio(key);
+                          }
+                          setState((){});
+                        },
+                        child: ListView.builder(
+                          itemCount: songMap.keys.length,
+                          itemBuilder: (context, index) {
+                            final entriesList = songMap.entries.toList();
+                            return ListTile(
+                              // [onTap] will open a dialog with two options:
+                              //
+                              // * Edit audio tags.
+                              // * Edit audio artwork.
+                              onTap: () => optionsDialog(context, entriesList[index].key),
+                              // [onLongPress] will read all information about selected items:
+                              title: Text(entriesList[index].value.title),
+                              subtitle: Text(
+                                entriesList[index].key ?? '<path>',
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_rounded),
+                              leading: entriesList[index].value.firstArtwork != null
+                                  ? Image.memory(entriesList[index].value.firstArtwork!)
+                                  : const Icon(Icons.image_not_supported),
+                            );
+                          },
                         ),
-                        trailing: const Icon(Icons.arrow_forward_rounded),
-                        leading: QueryArtworkWidget(
-                          id: songList[index].id,
-                          type: ArtworkType.AUDIO,
-                        ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async => await addAudioDialog(),
+                      child: const Text("Tap to Add song"),
+                    )
+                  ],
                 );
               }else{
                 return Center(
@@ -141,63 +154,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
               }
             }),
 
-            // FutureBuilder<List<SongModel>>(
-            //   future: _audioQuery.querySongs(),
-            //   builder: (context, item) {
-            //
-            //     if(storageGranted){
-            //
-            //     // Loading content
-            //     if (item.data == null) return const CircularProgressIndicator();
-            //
-            //     // When you try "query" without asking for [READ] or [Library] permission
-            //     // the plugin will return a [Empty] list.
-            //     if (item.data!.isEmpty) return const Text("Nothing found!");
-            //
-            //     songList = item.data!;
-            //     return RefreshIndicator(
-            //       onRefresh: () async {
-            //         setState(() {});
-            //       },
-            //       child: ListView.builder(
-            //         itemCount: songList.length,
-            //         itemBuilder: (context, index) {
-            //           return ListTile(
-            //             // [onTap] will open a dialog with two options:
-            //             //
-            //             // * Edit audio tags.
-            //             // * Edit audio artwork.
-            //             onTap: () => optionsDialog(context, index),
-            //             // [onLongPress] will read all information about selected items:
-            //             title: Text(songList[index].title),
-            //             subtitle: Text(
-            //               songList[index].artist ?? '<No artist>',
-            //             ),
-            //             trailing: const Icon(Icons.arrow_forward_rounded),
-            //             leading: QueryArtworkWidget(
-            //               id: songList[index].id,
-            //               type: ArtworkType.AUDIO,
-            //             ),
-            //           );
-            //         },
-            //       ),
-            //     );
-            //     }else{
-            //       return Center(
-            //         child: TextButton(
-            //           onPressed: () async {
-            //             if(await Permission.storage.request() == PermissionStatus.granted){
-            //               setState(()=> storageGranted = true);
-            //             }
-            //           },
-            //           child: Text("open Setting"),
-            //         ),
-            //       );
-            //
-            //     }
-            //
-            //   },
-            // ),
             OnToastWidget(
               effectType: EffectType.SLIDE,
               slidePositionType: SlidePositionType.BOTTOM,
@@ -224,7 +180,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     );
   }
 
-  optionsDialog(BuildContext context, int index) {
+  optionsDialog(BuildContext context, String path) {
     return showDialog(
       context: context,
       builder: (context) {
@@ -239,38 +195,49 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     title: const Text("Edit Audio"),
                     onTap: () {
                       Navigator.pop(context);
-                      editAudioDialog(context, index);
+                      editAudioDialog(context, path);
                     },
                   ),
                   ListTile(
                     title: const Text("Edit Artwork with FilePicker"),
                     onTap: () async {
                       Navigator.pop(context);
-                      result = await _audioEdit.editArtwork(
-                        songList[index].data,
-                        openFilePicker: true,
-                        searchInsideFolders: true,
+
+                      final file = await FilePicker.platform.pickFiles(
+                        type: FileType.image,
+                        allowMultiple: false,
                       );
+
+                      if(file != null){
+                        final imageData = await file.xFiles.first.readAsBytes();
+                        result = await _audioEdit.editArtworkWithUint8List(
+                          path,
+                          artworkBytes: imageData,
+                          searchInsideFolders: true,
+                        );
+
+                      }
+
                       setState(() {
                         _controller.forward();
                       });
                     },
                   ),
-                  ListTile(
-                    title: const Text("Edit Artwork from Web"),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      result = await _audioEdit.editArtwork(
-                        songList[index].data,
-                        openFilePicker: false,
-                        imagePath: "https://ec.crypton.co.jp/img/vocaloid/mikuv4x_img1.jpg",
-                        searchInsideFolders: true,
-                      );
-                      setState(() {
-                        _controller.forward();
-                      });
-                    },
-                  ),
+                  // ListTile(
+                  //   title: const Text("Edit Artwork from Web"),
+                  //   onTap: () async {
+                  //     Navigator.pop(context);
+                  //     result = await _audioEdit.editArtwork(
+                  //       songList[index].data,
+                  //       openFilePicker: false,
+                  //       imagePath: "https://ec.crypton.co.jp/img/vocaloid/mikuv4x_img1.jpg",
+                  //       searchInsideFolders: true,
+                  //     );
+                  //     setState(() {
+                  //       _controller.forward();
+                  //     });
+                  //   },
+                  // ),
                 ],
               ),
             ),
@@ -288,7 +255,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     );
   }
 
-  editAudioDialog(BuildContext context, int index) {
+  editAudioDialog(BuildContext context, String path) {
     return showDialog(
       context: context,
       builder: (context) {
@@ -319,7 +286,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 };
                 Navigator.pop(context);
                 result = await _audioEdit.editAudio(
-                  songList[index].data,
+                  path,
                   tag,
                   searchInsideFolders: true,
                 );
@@ -340,4 +307,331 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       },
     );
   }
+
+  Future addAudioDialog() async{
+    final pick = await FilePicker.platform.pickFiles(
+      type: FileType.audio,
+      allowMultiple: true,
+    );
+
+    if(pick != null && pick.files.isNotEmpty){
+      for(final xFile in pick.xFiles){
+        final audioModel = await _audioEdit.readAudio(xFile.path);
+        setState(() {
+          songMap[xFile.path] = audioModel;
+        });
+      }
+    }
+  }
+
+
 }
+
+// class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
+//   // OnAudioQuery instance
+//   final OnAudioQuery _audioQuery = OnAudioQuery();
+//   // OnAudioQuery instance
+//   final OnAudioEdit _audioEdit = OnAudioEdit();
+//
+//   // Texts controllers
+//   TextEditingController name = TextEditingController();
+//   TextEditingController artist = TextEditingController();
+//
+//   // OnToastWidget animation controller
+//   late final AnimationController _controller = AnimationController(
+//     vsync: this,
+//     duration: const Duration(seconds: 2),
+//   );
+//
+//   // Main parameters
+//   List<SongModel> songList = [];
+//   bool? result;
+//
+//   bool storageGranted = false;
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     requestPermission();
+//   }
+//
+//
+//   Future requestPermission() async {
+//     //todo リクエストを正しくする。
+//     if (await Permission.storage.request().isGranted) {
+//       // パーミッションが許可されました
+//       await _audioQuery.permissionsRequest();
+//       songList = await _audioQuery.querySongs();
+//       setState(()=> storageGranted = true);
+//     } else {
+//       // パーミッションが拒否されました
+//       setState(()=> storageGranted = false);
+//       debugPrint("Permission Denied");
+//       await openAppSettings();
+//
+//
+//
+//     }
+//
+//
+//     // bool permissionStatus = await _audioQuery.permissionsStatus();
+//     // if (!permissionStatus) {
+//     //   await _audioQuery.permissionsRequest();
+//     //   setState(() {});
+//     // }
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       home: Scaffold(
+//         appBar: AppBar(
+//           title: const Text("Songs"),
+//           elevation: 2,
+//         ),
+//         body: Stack(
+//           children: [
+//             Builder(builder: (context){
+//               if(storageGranted){
+//                 // When you try "query" without asking for [READ] or [Library] permission
+//                 // the plugin will return a [Empty] list.
+//                 if (songList.isEmpty) return const Text("Nothing found!");
+//
+//                 return RefreshIndicator(
+//                   onRefresh: () async {
+//                     setState(() {});
+//                   },
+//                   child: ListView.builder(
+//                     itemCount: songList.length,
+//                     itemBuilder: (context, index) {
+//                       return ListTile(
+//                         // [onTap] will open a dialog with two options:
+//                         //
+//                         // * Edit audio tags.
+//                         // * Edit audio artwork.
+//                         onTap: () => optionsDialog(context, index),
+//                         // [onLongPress] will read all information about selected items:
+//                         title: Text(songList[index].title),
+//                         subtitle: Text(
+//                           songList[index].album ?? '<No artist>',
+//                         ),
+//                         trailing: const Icon(Icons.arrow_forward_rounded),
+//                         leading: QueryArtworkWidget(
+//                           id: songList[index].id,
+//                           type: ArtworkType.AUDIO,
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                 );
+//               }else{
+//                 return Center(
+//                   child: TextButton(
+//                     onPressed: () async => await requestPermission(),
+//                     child: const Text("Request Storage Permission"),
+//                   ),
+//                 );
+//
+//               }
+//             }),
+//
+//             // FutureBuilder<List<SongModel>>(
+//             //   future: _audioQuery.querySongs(),
+//             //   builder: (context, item) {
+//             //
+//             //     if(storageGranted){
+//             //
+//             //     // Loading content
+//             //     if (item.data == null) return const CircularProgressIndicator();
+//             //
+//             //     // When you try "query" without asking for [READ] or [Library] permission
+//             //     // the plugin will return a [Empty] list.
+//             //     if (item.data!.isEmpty) return const Text("Nothing found!");
+//             //
+//             //     songList = item.data!;
+//             //     return RefreshIndicator(
+//             //       onRefresh: () async {
+//             //         setState(() {});
+//             //       },
+//             //       child: ListView.builder(
+//             //         itemCount: songList.length,
+//             //         itemBuilder: (context, index) {
+//             //           return ListTile(
+//             //             // [onTap] will open a dialog with two options:
+//             //             //
+//             //             // * Edit audio tags.
+//             //             // * Edit audio artwork.
+//             //             onTap: () => optionsDialog(context, index),
+//             //             // [onLongPress] will read all information about selected items:
+//             //             title: Text(songList[index].title),
+//             //             subtitle: Text(
+//             //               songList[index].artist ?? '<No artist>',
+//             //             ),
+//             //             trailing: const Icon(Icons.arrow_forward_rounded),
+//             //             leading: QueryArtworkWidget(
+//             //               id: songList[index].id,
+//             //               type: ArtworkType.AUDIO,
+//             //             ),
+//             //           );
+//             //         },
+//             //       ),
+//             //     );
+//             //     }else{
+//             //       return Center(
+//             //         child: TextButton(
+//             //           onPressed: () async {
+//             //             if(await Permission.storage.request() == PermissionStatus.granted){
+//             //               setState(()=> storageGranted = true);
+//             //             }
+//             //           },
+//             //           child: Text("open Setting"),
+//             //         ),
+//             //       );
+//             //
+//             //     }
+//             //
+//             //   },
+//             // ),
+//             OnToastWidget(
+//               effectType: EffectType.SLIDE,
+//               slidePositionType: SlidePositionType.BOTTOM,
+//               controller: _controller,
+//               child: Container(
+//                 color: result == true ? Colors.green : Colors.red,
+//                 height: 60,
+//                 width: double.infinity,
+//                 child: Column(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   children: [
+//                     Text(result.toString()),
+//                     const SizedBox(height: 10),
+//                     Text(result == true
+//                         ? "Pull to refresh to see the magic happening"
+//                         : "Opps, something wrong happened")
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   optionsDialog(BuildContext context, int index) {
+//     return showDialog(
+//       context: context,
+//       builder: (context) {
+//         return AlertDialog(
+//           title: const Text("Choose a option"),
+//           content: SizedBox(
+//             height: 120,
+//             child: SingleChildScrollView(
+//               child: Column(
+//                 children: [
+//                   ListTile(
+//                     title: const Text("Edit Audio"),
+//                     onTap: () {
+//                       Navigator.pop(context);
+//                       editAudioDialog(context, index);
+//                     },
+//                   ),
+//                   ListTile(
+//                     title: const Text("Edit Artwork with FilePicker"),
+//                     onTap: () async {
+//                       Navigator.pop(context);
+//                       result = await _audioEdit.editArtwork(
+//                         songList[index].data,
+//                         openFilePicker: true,
+//                         searchInsideFolders: true,
+//                       );
+//                       setState(() {
+//                         _controller.forward();
+//                       });
+//                     },
+//                   ),
+//                   ListTile(
+//                     title: const Text("Edit Artwork from Web"),
+//                     onTap: () async {
+//                       Navigator.pop(context);
+//                       result = await _audioEdit.editArtwork(
+//                         songList[index].data,
+//                         openFilePicker: false,
+//                         imagePath: "https://ec.crypton.co.jp/img/vocaloid/mikuv4x_img1.jpg",
+//                         searchInsideFolders: true,
+//                       );
+//                       setState(() {
+//                         _controller.forward();
+//                       });
+//                     },
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//           actions: [
+//             MaterialButton(
+//               onPressed: () {
+//                 Navigator.pop(context);
+//               },
+//               child: const Text("Cancel"),
+//             )
+//           ],
+//         );
+//       },
+//     );
+//   }
+//
+//   editAudioDialog(BuildContext context, int index) {
+//     return showDialog(
+//       context: context,
+//       builder: (context) {
+//         return AlertDialog(
+//           title: const Text("Change info"),
+//           content: SizedBox(
+//             height: 120,
+//             child: Column(
+//               children: [
+//                 TextFormField(
+//                   controller: name,
+//                 ),
+//                 const SizedBox(
+//                   height: 20,
+//                 ),
+//                 TextField(
+//                   controller: artist,
+//                 )
+//               ],
+//             ),
+//           ),
+//           actions: [
+//             MaterialButton(
+//               onPressed: () async {
+//                 Map<TagType, dynamic> tag = {
+//                   TagType.TITLE: name.text,
+//                   TagType.ARTIST: artist.text,
+//                 };
+//                 Navigator.pop(context);
+//                 result = await _audioEdit.editAudio(
+//                   songList[index].data,
+//                   tag,
+//                   searchInsideFolders: true,
+//                 );
+//                 setState(() {
+//                   _controller.forward();
+//                 });
+//               },
+//               child: const Text("Create"),
+//             ),
+//             MaterialButton(
+//               onPressed: () {
+//                 Navigator.pop(context);
+//               },
+//               child: const Text("Cancel"),
+//             )
+//           ],
+//         );
+//       },
+//     );
+//   }
+// }

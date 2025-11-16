@@ -5,8 +5,8 @@ import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.compose.animation.core.copy
-import androidx.compose.foundation.text2.input.delete
+//import androidx.compose.animation.core.copy
+//import androidx.compose.foundation.text2.input.delete
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,6 +23,8 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.audio.generic.Utils
 import org.jaudiotagger.tag.TagOptionSingleton
 import org.jaudiotagger.tag.images.StandardArtwork
+//import org.jaudiotagger.tag.images.Artwork
+//import org.jaudiotagger.tag.images.AndroidArtwork
 import org.jaudiotagger.tag.reference.PictureTypes
 import java.io.File
 import java.io.FileInputStream
@@ -66,7 +68,8 @@ class OnArtworkEditWithByteArray10(private val context: Context, private val act
         val data = call.argument<String>("data")!!
         val artworkBytes = call.argument<ByteArray>("artworkBytes")
         val type = checkArtworkFormat(call.argument<Int>("type")!!)
-        val description = call.argument<String>("description")!!
+        //val description = call.argument<String>("description")!!
+        val artworkDescription = call.argument<String>("description")!! // 変数名を変更
         val size = call.argument<Int>("size")!!
         searchInsideFolders = call.argument<Boolean>("searchInsideFolders")!!
 
@@ -110,13 +113,33 @@ class OnArtworkEditWithByteArray10(private val context: Context, private val act
 
         // ByteArrayから直接Artworkオブジェクトを作成する
         val artwork = StandardArtwork().apply {
-            binaryData = artworkBytes
-            mimeType = type
-            pictureType = PictureTypes.DEFAULT_ID
-            description = description
-            height = size
-            width = size
+            this.binaryData = artworkBytes
+            this.mimeType = type
+            this.pictureType = PictureTypes.DEFAULT_ID
+            this.description = artworkDescription // 変更した変数名を使用
+            this.height = size
+            this.width = size
         }
+
+//        // ByteArrayから直接Artworkオブジェクトを作成する
+//        val artwork = StandardArtwork().apply {
+//            setImageData(artworkBytes)
+//            setMimeType(type)
+//            setPictureType(PictureTypes.DEFAULT_ID)
+//            setDescription(artworkDescription)
+//            setHeight(size)
+//            setWidth(size)
+//        }
+
+//        val artwork = AndroidArtwork()
+//
+//        artwork.setBinaryData(artworkBytes)
+//        artwork.setMimeType(type)
+//        artwork.setPictureType(PictureTypes.DEFAULT_ID)
+//        artwork.setDescription(artworkDescription)
+//        artwork.setHeight(size)
+//        artwork.setWidth(size)
+
 
         audioTag.setField(artwork)
         audioFile.file = temp

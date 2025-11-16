@@ -1,5 +1,5 @@
 group 'com.lucasjosino.on_audio_edit'
-version: 1.6.0
+version '1.6.0'
 
 buildscript {
     ext.kotlin_version = "1.7.10" //"2.1.0"
@@ -25,12 +25,13 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
+
 android {
     if (project.android.hasProperty("namespace")) {
         namespace = "com.example.plugin_sample"
     }
 
-    compileSdk = 34 //33
+    compileSdk = 36 //33
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -38,7 +39,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = '1.8'
     }
 
     sourceSets {
@@ -75,9 +76,15 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     //
     implementation "androidx.documentfile:documentfile:1.0.1"
-    implementation "com.github.AdrienPoupa:jaudiotagger:2.2.3"
+
+    //implementation 'org.jaudiotagger:jaudiotagger:3.0.1' //本家らしいけどダメ
+    //implementation "com.github.AdrienPoupa:jaudiotagger:2.2.3" //jaudiotagger.tag.images.StandardArtworkをimportできない
+    //implementation 'com.github.RouHim:jaudiotagger:2.0.7'
+    implementation "net.jthink:jaudiotagger:3.0.1"
     //
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2-native-mt"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+
+
 }
