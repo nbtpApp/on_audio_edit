@@ -186,63 +186,60 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       builder: (context) {
         return AlertDialog(
           title: const Text("Choose a option"),
-          content: SizedBox(
-            height: 120,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  ListTile(
-                    title: const Text("Edit Audio"),
-                    onTap: () {
-                      Navigator.pop(context);
-                      editAudioDialog(context, path);
-                    },
-                  ),
-                  ListTile(
-                    title: const Text("Edit Artwork with FilePicker"),
-                    onTap: () async {
-                      Navigator.pop(context);
-
-                      final file = await FilePicker.platform.pickFiles(
-                        type: FileType.image,
-                        allowMultiple: false,
-                      );
-
-                      if(file != null){
-                        final imageData = await file.xFiles.first.readAsBytes();
-                        result = await _audioEdit.editArtworkWithUint8List(
-                          path,
-                          artworkBytes: imageData,
-                          searchInsideFolders: true,
-                        );
-
+          content: SingleChildScrollView(
+            child: Builder(
+                builder: (context) {
+                  final sb = StringBuffer();
+                  final audioModel = songMap[path];
+                  if(audioModel != null) {
+                    final map = audioModel.getMap;
+                    map.forEach((key, value) {
+                      if(value is String){
+                        sb.write("$key: $value\n");
+                      }else if(value is int){
+                        sb.write("$key: ${value.toString()}\n");
+                      }else{
+                        sb.write("$key: ${value.runtimeType.toString()}\n");
                       }
-
-                      setState(() {
-                        _controller.forward();
-                      });
-                    },
-                  ),
-                  // ListTile(
-                  //   title: const Text("Edit Artwork from Web"),
-                  //   onTap: () async {
-                  //     Navigator.pop(context);
-                  //     result = await _audioEdit.editArtwork(
-                  //       songList[index].data,
-                  //       openFilePicker: false,
-                  //       imagePath: "https://ec.crypton.co.jp/img/vocaloid/mikuv4x_img1.jpg",
-                  //       searchInsideFolders: true,
-                  //     );
-                  //     setState(() {
-                  //       _controller.forward();
-                  //     });
-                  //   },
-                  // ),
-                ],
-              ),
+                    });
+                  }
+                  return Text(sb.toString());
+                }
             ),
           ),
           actions: [
+            ListTile(
+              title: const Text("Edit Audio"),
+              onTap: () {
+                Navigator.pop(context);
+                editAudioDialog(context, path);
+              },
+            ),
+            ListTile(
+              title: const Text("Edit Artwork with FilePicker"),
+              onTap: () async {
+                Navigator.pop(context);
+
+                final file = await FilePicker.platform.pickFiles(
+                  type: FileType.image,
+                  allowMultiple: false,
+                );
+
+                if(file != null){
+                  final imageData = await file.xFiles.first.readAsBytes();
+                  result = await _audioEdit.editArtworkWithUint8List(
+                    path,
+                    artworkBytes: imageData,
+                    searchInsideFolders: true,
+                  );
+
+                }
+
+                setState(() {
+                  _controller.forward();
+                });
+              },
+            ),
             MaterialButton(
               onPressed: () {
                 Navigator.pop(context);

@@ -77,10 +77,15 @@ dependencies {
     //
     implementation "androidx.documentfile:documentfile:1.0.1"
 
-    //implementation 'org.jaudiotagger:jaudiotagger:3.0.1' //本家らしいけどダメ
-    //implementation "com.github.AdrienPoupa:jaudiotagger:2.2.3" //jaudiotagger.tag.images.StandardArtworkをimportできない
-    //implementation 'com.github.RouHim:jaudiotagger:2.0.7'
-    implementation "net.jthink:jaudiotagger:3.0.1"
+    //implementation "com.github.AdrienPoupa:jaudiotagger:2.2.3" //もともと読み込んでいたもの。jaudiotagger.tag.images.StandardArtworkをimportできない。
+    //implementation 'org.jaudiotagger:jaudiotagger:3.0.1' // 本家jaudiotaggerの最新。こちらはリモートリポジトリが見つからない。
+    // implementation "net.jthink:jaudiotagger:3.0.1" // 本家jaudiotaggerの最新。net.にしたら取り込めたが、StandardArtworkはimportできるけど、Artistとgenreが読み込めない。
+
+    //上記の通り、それぞれ難点があったが、こちらで解決した
+    //https://bitbucket.org/ijabz/jaudiotagger/downloads/?tab=downloads でDLしたファイルで 手動でver2.2.3を導入
+    //androidフォルダにlibsフォルダを作成し、DLしたjarファイルを配置。
+    //そのうえで、↓を記載。
+    implementation files('libs/jaudiotagger-2.2.3.jar')
     //
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2-native-mt"

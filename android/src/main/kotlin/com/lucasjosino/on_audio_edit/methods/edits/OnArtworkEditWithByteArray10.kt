@@ -22,9 +22,7 @@ import kotlinx.coroutines.withContext
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.audio.generic.Utils
 import org.jaudiotagger.tag.TagOptionSingleton
-import org.jaudiotagger.tag.images.StandardArtwork
-//import org.jaudiotagger.tag.images.Artwork
-//import org.jaudiotagger.tag.images.AndroidArtwork
+import org.jaudiotagger.tag.images.StandardArtwork //もとのjaudiotagerでは削除されていたので、本家の2.2.3を導入した
 import org.jaudiotagger.tag.reference.PictureTypes
 import java.io.File
 import java.io.FileInputStream
